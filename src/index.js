@@ -20,7 +20,14 @@ const message = "Welcome to chat app"
 io.on('connection', (socket) => {
     console.log('New websocket connection')
     // socket.emit('message', generateMessage())
-    socket.broadcast.emit('message','New user is added',)
+    // socket.broadcast.emit('message','New user is added')
+
+    socket.on('join', ({username, room}) => {
+        console.log(username)
+        socket.join(room)
+        socket.emit('message', generateMessage(message))
+        socket.broadcast.to(room).emit('message',generateMessage(username +' Added'))
+    })
 
     socket.on('sendMessage',(message,callback) => {
         const filter = new Filter()

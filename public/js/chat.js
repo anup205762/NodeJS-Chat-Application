@@ -8,8 +8,13 @@ const $messageFormButton = $messageForm.querySelector('button')
 const $sendLocationButton = document.querySelector('#sendLocation')
 
 const $messages = document.querySelector('#messages')
+//HTML Templates
 const messageTemplate = document.querySelector('#message-template').innerHTML
 const locationTemplate = document.querySelector('#location-message-template').innerHTML
+
+//Options
+const { username, room } = Qs.parse(location.search,{ignoreQueryPrefic : true})
+console.log(Qs.parse(location.search,{ignoreQueryPrefic : true}))
 
 socket.on('countUpdated',(count) => {
     console.log('Count has been updated count = ',count)
@@ -73,3 +78,5 @@ $sendLocationButton.addEventListener('click', () => {
         console.log(location)
     })
 })
+
+socket.emit('join' , { username, room })
