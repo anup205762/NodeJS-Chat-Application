@@ -11,9 +11,37 @@ const $messages = document.querySelector('#messages')
 //HTML Templates
 const messageTemplate = document.querySelector('#message-template').innerHTML
 const locationTemplate = document.querySelector('#location-message-template').innerHTML
+const sidebarTemplate = document.querySelector('#sidebar-template').innerHTML
 
 //Options
-const { username, room } = Qs.parse(location.search,{ignoreQueryPrefic : true})
+const { username, room } = Qs.parse(location.search.slice(1),{ignoreQueryPrefic : true})
+
+const autscroll = () => {
+    //New message element
+    const $newMessage = $messages.lastElementChild
+    // Height of last new message
+    const newMessagesStyles = getComputedStyle($newMessage)
+    const newMessageMargin = parseInt(newMessagesStyles.marginBottom)
+    const newMessageHeight = $newMessage.offsetHeight + newMessageMargin
+    const visibleHeight = $messages.offsetHeight
+    //Height of messages container
+    const containerHeight = $messages.scrollHeight
+    //how far have i scrolled
+    const scrollOffset = $messages.scrollTop + visibleHeight
+
+    if(containerHeight - newMessageHeight <= scrollOffset){
+         $messages.scrollTop = $messages.scrollHeight
+    }
+    
+    console.log(newMessagesStyles)
+    console.log(newMessageMargin)
+    console.log(newMessageHeight)
+    console.log(visibleHeight)
+    console.log(containerHeight)
+    console.log(scrollOffset)
+
+}
+
 console.log(Qs.parse(location.search,{ignoreQueryPrefic : true}))
 
 socket.on('countUpdated',(count) => {
@@ -23,21 +51,36 @@ socket.on('countUpdated',(count) => {
 socket.on('message',(message) => {
     console.log(message)
     const html = Mustache.render(messageTemplate,{
+        username: message.username,
         message : message.text,
         createdAt : moment(message.createdAt).format('h:mm A') 
     })
+    console.log(message)
     $messages.insertAdjacentHTML('beforeend',html)
+    autscroll()
 })
 
 socket.on('locationMessage',(url) => {
     console.log(url)
     const html = Mustache.render(locationTemplate,{
+        username : url.username,
         url : url.url,
         createdAt : moment(url.createdAt).format('h:mm A') 
     })
     $messages.insertAdjacentHTML('beforeend',html)
+    autscroll()
 })
 
+socket.on('roomData', ({room,users}) => {
+    const html = Mustache.render(sidebarTemplate,{
+        room,
+        users
+    })
+    console.log(html)
+    document.querySelector('#sidebar').innerHTML = html
+    console.log(room)
+    console.log(users)
+})
 // document.querySelector('#increment').addEventListener('click', () => {
 //     console.log("+1 clicked")
 //     socket.emit('increment')
@@ -79,4 +122,9 @@ $sendLocationButton.addEventListener('click', () => {
     })
 })
 
-socket.emit('join' , { username, room })
+socket.emit('join' , { username, room } , (error) => {
+    if(error){
+        alert(error)
+        location.href ='/'
+    }    
+})
